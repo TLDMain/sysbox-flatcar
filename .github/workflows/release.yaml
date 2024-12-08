@@ -1,0 +1,55 @@
+name: Make a release
+
+on:
+  workflow_dispatch:
+    inputs:
+      sysbox_version:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl fuse gettext
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download butane release
+        uses: robinraju/release-downloader@v1.11
+        with:
+          repository: coreos/butane
+          latest: true
+          fileName: butane-x86_64-unknown-linux-gnu
+          out-file-path: butane
+
+      - name: Make release files
+        run: |
+          mkdir -p sysbox
+          curl -LO https://downloads.nestybox.com/sysbox/releases/v${{inputs.sysbox_version}}/sysbox-ce_${{inputs.sysbox_version}}-0.linux_amd64.deb
+          dpkg -x sysbox-ce_{{inputs.sysbox_version}}-0.linux_amd64.deb sysbox
+
+          mkdir -p release
+          cp /usr/bin/fusermount release/fusermount
+          for file in sysbox/usr/bin/*; do
+            cp "$file" release/$(basename "$file")
+          done
+
+          chmod a+x butane
+          export RELEASE_ASSETS_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/v${{inputs.sysbox_version}}
+          envsubst '$RELEASE_ASSETS_URL' < flatcar.bu | butane -pso releases/flatcar.ign
+
+      - name: GH Release
+        uses: softprops/action-gh-release@v2.1.0
+        with:
+          tag_name: v${{inputs.sysbox_version}}
+          files: |
+            release/*.*
+          fail_on_unmatched_files: true
+          make_latest: true
+          
