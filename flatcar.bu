@@ -8,19 +8,23 @@ storage:
     - path: /opt/bin/sysbox/sysbox-runc
       mode: 0755
       contents:
-        source: ${RELEASE_ASSETS_URL}/sysbox-runc
+        source: ${RELEASE_ASSETS_URL}/sysbox-runc.gz
+        compression: gzip
     - path: /opt/bin/sysbox/sysbox-fs
       mode: 0755
       contents:
-        source: ${RELEASE_ASSETS_URL}/sysbox-fs
+        source: ${RELEASE_ASSETS_URL}/sysbox-fs.gz
+        compression: gzip
     - path: /opt/bin/sysbox/sysbox-mgr
       mode: 0755
       contents:
-        source: ${RELEASE_ASSETS_URL}/sysbox-mgr
+        source: ${RELEASE_ASSETS_URL}/sysbox-mgr.gz
+        compression: gzip
     - path: /opt/bin/sysbox/fusermount
       mode: 0755
       contents:
-        source: ${RELEASE_ASSETS_URL}/fusermount
+        source: ${RELEASE_ASSETS_URL}/fusermount.gz
+        compression: gzip
     - path: /etc/modules-load.d/50-sysbox-mod.conf
       mode: 0644
       contents:

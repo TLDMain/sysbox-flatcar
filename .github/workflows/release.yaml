@@ -44,13 +44,17 @@ jobs:
           export RELEASE_ASSETS_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/v${{inputs.sysbox_version}}
           envsubst '$RELEASE_ASSETS_URL' < flatcar.bu | ./butane/butane-x86_64-unknown-linux-gnu -pso release/flatcar.ign
 
+          for file in release/*; do
+            gzip -9 $file
+          done
+
       - name: GH Release
         uses: softprops/action-gh-release@v2.1.0
         with:
           tag_name: v${{inputs.sysbox_version}}
           files: |
-            release/fusermount
-            release/sysbox-*
-            release/flatcar.ign
+            release/fusermount.gz
+            release/sysbox-*.gz
+            release/flatcar.ign.gz
           fail_on_unmatched_files: true
           make_latest: false
