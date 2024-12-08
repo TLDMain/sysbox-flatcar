@@ -1,0 +1,110 @@
+variant: flatcar
+version: 1.1.0
+storage:
+  directories:
+    - path: /opt/bin/sysbox
+      mode: 0755
+  files:
+    - path: /opt/bin/sysbox/sysbox-runc
+      mode: 0755
+      contents:
+        source: ${RELEASE_ASSETS_URL}/sysbox-runc
+    - path: /opt/bin/sysbox/sysbox-fs
+      mode: 0755
+      contents:
+        source: ${RELEASE_ASSETS_URL}/sysbox-fs
+    - path: /opt/bin/sysbox/sysbox-mgr
+      mode: 0755
+      contents:
+        source: ${RELEASE_ASSETS_URL}/sysbox-mgr
+    - path: /opt/bin/sysbox/fusermount
+      mode: 0755
+      contents:
+        source: ${RELEASE_ASSETS_URL}/fusermount
+    - path: /etc/modules-load.d/50-sysbox-mod.conf
+      mode: 0644
+      contents:
+        inline: |
+          configfs
+    - path: /etc/sysctl.d/99-sysbox-sysctl.conf
+      mode: 0644
+      contents:
+        inline: |
+          kernel.pid_max=4194304
+          kernel.keys.maxkeys = 20000
+          kernel.keys.maxbytes = 400000
+          fs.inotify.max_queued_events = 1048576
+          fs.inotify.max_user_watches = 1048576
+          fs.inotify.max_user_instances = 1048576
+    - path: /etc/docker/daemon.json
+      mode: 0644
+      contents:
+        inline: |
+          {
+            "bip": "172.20.0.1/16",
+            "default-address-pools": [{"base": "172.25.0.0/16", "size": 24}],
+            "runtimes": {"sysbox-runc": {"path": "/usr/local/bin/sysbox-runc"}}
+          }
+systemd:
+  units:
+    - name: sysbox.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Sysbox container runtime
+        Documentation=https://github.com/nestybox/sysbox
+        BindsTo=sysbox-mgr.service sysbox-fs.service
+        After=sysbox-mgr.service sysbox-fs.service
+        Before=docker.service containerd.service
+
+        [Service]
+        Type=exec
+        ExecStart=/bin/sh -c "/opt/bin/sysbox/sysbox-runc --version && /opt/bin/sysbox/sysbox-mgr --version && /opt/bin/sysbox/sysbox-fs --version && /bin/sleep infinity"
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: sysbox-fs.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=sysbox-fs (part of the Sysbox container runtime)
+        PartOf=sysbox.service
+        After=sysbox-mgr.service
+
+        [Service]
+        Type=simple
+        Type=notify
+        Environment=PATH=/opt/bin/sysbox/:$PATH
+        ExecStart=/opt/bin/sysbox/sysbox-fs
+        TimeoutStartSec=10
+        TimeoutStopSec=10
+        StartLimitInterval=0
+        NotifyAccess=main
+        OOMScoreAdjust=-500
+        LimitNOFILE=infinity
+        LimitNPROC=infinity
+
+        [Install]
+        WantedBy=sysbox.service
+    - name: sysbox-mgr.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=sysbox-mgr (part of the Sysbox container runtime)
+        PartOf=sysbox.service
+
+        [Service]
+        Type=simple
+        Type=notify
+        ExecStartPre=/bin/sh -c "useradd sysbox > /dev/null 2>&1  || true"
+        ExecStart=/opt/bin/sysbox/sysbox-mgr
+        TimeoutStartSec=45
+        TimeoutStopSec=90
+        StartLimitInterval=0
+        NotifyAccess=main
+        OOMScoreAdjust=-500
+        LimitNOFILE=infinity
+        LimitNPROC=infinity
+
+        [Install]
+        WantedBy=sysbox.service
