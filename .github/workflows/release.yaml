@@ -42,7 +42,7 @@ jobs:
 
           chmod a+x butane/butane-x86_64-unknown-linux-gnu
           export RELEASE_ASSETS_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/v${{inputs.sysbox_version}}
-          envsubst '$RELEASE_ASSETS_URL' < flatcar.bu | ./butane/butane-x86_64-unknown-linux-gnu -pso releases/flatcar.ign
+          envsubst '$RELEASE_ASSETS_URL' < flatcar.bu | ./butane/butane-x86_64-unknown-linux-gnu -pso release/flatcar.ign
 
       - name: GH Release
         uses: softprops/action-gh-release@v2.1.0
