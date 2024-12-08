@@ -47,7 +47,7 @@ storage:
           {
             "bip": "172.20.0.1/16",
             "default-address-pools": [{"base": "172.25.0.0/16", "size": 24}],
-            "runtimes": {"sysbox-runc": {"path": "/usr/local/bin/sysbox-runc"}}
+            "runtimes": {"sysbox-runc": {"path": "/opt/bin/sysbox/sysbox-runc"}}
           }
 systemd:
   units:
