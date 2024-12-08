@@ -31,7 +31,7 @@ jobs:
       - name: Make release files
         run: |
           mkdir -p sysbox
-          curl -LO https://downloads.nestybox.com/sysbox/releases/v${{inputs.sysbox_version}}/sysbox-ce_${{inputs.sysbox_version}}-0.linux_amd64.deb
+          curl -sLO https://downloads.nestybox.com/sysbox/releases/v${{inputs.sysbox_version}}/sysbox-ce_${{inputs.sysbox_version}}-0.linux_amd64.deb
           dpkg -x sysbox-ce_${{inputs.sysbox_version}}-0.linux_amd64.deb sysbox
 
           mkdir -p release
@@ -49,7 +49,8 @@ jobs:
         with:
           tag_name: v${{inputs.sysbox_version}}
           files: |
-            release/*.*
+            release/fusermount
+            release/sysbox-*
+            release/flatcar.ign
           fail_on_unmatched_files: true
-          make_latest: true
-
+          make_latest: false
